@@ -25,49 +25,60 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 /*
  * A simple HOC that provides facility for listening to container resizes.
  */
+/*:: type State = {
+  mounted: boolean,
+  width: number
+};*/
 
-exports.default = function (ComposedComponent) {
-  return function (_React$Component) {
-    _inherits(_class2, _React$Component);
+exports.default = function (ComposedComponent /*: ReactClass*/) /*: ReactClass*/ {
+  var _class, _temp2;
 
-    function _class2() {
+  return _temp2 = _class = function (_React$Component) {
+    _inherits(_class, _React$Component);
+
+    function _class() {
       var _temp, _this, _ret;
 
-      _classCallCheck(this, _class2);
+      _classCallCheck(this, _class);
 
       for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
         args[_key] = arguments[_key];
       }
 
       return _ret = (_temp = (_this = _possibleConstructorReturn(this, _React$Component.call.apply(_React$Component, [this].concat(args))), _this), _this.state = {
+        mounted: false,
         width: 1280
+      }, _this.onWindowResize = function (_event /*: Event*/, cb /*: ?Function*/) {
+        var node = _reactDom2.default.findDOMNode(_this);
+        _this.setState({ width: node.offsetWidth }, cb);
       }, _temp), _possibleConstructorReturn(_this, _ret);
     }
 
-    _class2.prototype.componentDidMount = function componentDidMount() {
-      var node = _reactDom2.default.findDOMNode(this);
-      // Bind here so we have the same reference when removing the listener on unmount.
-      this.onWindowResize = this._onWindowResize.bind(this, node);
+    _class.prototype.componentDidMount = function componentDidMount() {
+      this.setState({ mounted: true });
 
       window.addEventListener('resize', this.onWindowResize);
-      // This is intentional. Once to properly set the breakpoint and resize the elements,
-      // and again to compensate for any scrollbar that appeared because of the first step.
-      this.onWindowResize();
+      // Call to properly set the breakpoint and resize the elements.
+      // Note that if you're doing a full-width element, this can get a little wonky if a scrollbar
+      // appears because of the grid. In that case, fire your own resize event, or set `overflow: scroll` on your body.
       this.onWindowResize();
     };
 
-    _class2.prototype.componentWillUnmount = function componentWillUnmount() {
+    _class.prototype.componentWillUnmount = function componentWillUnmount() {
       window.removeEventListener('resize', this.onWindowResize);
     };
 
-    _class2.prototype._onWindowResize = function _onWindowResize(node, _event) {
-      this.setState({ width: node.offsetWidth });
-    };
-
-    _class2.prototype.render = function render() {
+    _class.prototype.render = function render() {
+      if (this.props.measureBeforeMount && !this.state.mounted) return _react2.default.createElement('div', _extends({}, this.props, this.state));
       return _react2.default.createElement(ComposedComponent, _extends({}, this.props, this.state));
     };
 
-    return _class2;
-  }(_react2.default.Component);
+    return _class;
+  }(_react2.default.Component), _class.defaultProps = {
+    measureBeforeMount: false
+  }, _class.propTypes = {
+    // If true, will not render children until mounted. Useful for getting the exact width before
+    // rendering, to prevent any unsightly resizing.
+    measureBeforeMount: _react2.default.PropTypes.bool
+  }, _temp2;
 };

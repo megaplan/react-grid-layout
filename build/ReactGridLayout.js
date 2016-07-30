@@ -26,21 +26,30 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-// Types
-
 var noop = function noop() {};
+
+// Types
+/*:: import type {ResizeEvent, DragEvent, Layout, LayoutItem} from './utils';*/
+
 // End Types
 
 /**
  * A reactive, fluid grid layout with draggable, resizable components.
  */
 
+/*:: type State = {
+  activeDrag: ?LayoutItem,
+  layout: Layout,
+  mounted: boolean,
+  oldDragItem: ?LayoutItem,
+  oldResizeItem: ?LayoutItem
+};*/
+
 var ReactGridLayout = function (_React$Component) {
   _inherits(ReactGridLayout, _React$Component);
 
   // TODO publish internal ReactClass displayName transform
-
-  function ReactGridLayout(props, context) {
+  function ReactGridLayout(props /*: typeof ReactGridLayout.prototype.props*/, context /*: any*/) /*: void*/ {
     _classCallCheck(this, ReactGridLayout);
 
     var _this = _possibleConstructorReturn(this, _React$Component.call(this, props, context));
@@ -52,22 +61,23 @@ var ReactGridLayout = function (_React$Component) {
   }
 
   ReactGridLayout.prototype.componentDidMount = function componentDidMount() {
+    this.setState({ mounted: true });
     // Call back with layout on mount. This should be done after correcting the layout width
     // to ensure we don't rerender with the wrong width.
     this.props.onLayoutChange(this.state.layout);
-    this.setState({ isMounted: true });
   };
 
-  ReactGridLayout.prototype.componentWillReceiveProps = function componentWillReceiveProps(nextProps) {
-    var newLayoutBase = undefined;
+  ReactGridLayout.prototype.componentWillReceiveProps = function componentWillReceiveProps(nextProps /*: typeof ReactGridLayout.prototype.props*/) {
+    var newLayoutBase = void 0;
     // Allow parent to set layout directly.
     if (!(0, _lodash2.default)(nextProps.layout, this.props.layout)) {
       newLayoutBase = nextProps.layout;
     }
+
     // If children change, also regenerate the layout. Use our state
     // as the base in case because it may be more up to date than
     // what is in props.
-    else if (!nextProps.children.length !== this.props.children.length) {
+    else if (nextProps.children.length !== this.props.children.length) {
         newLayoutBase = this.state.layout;
       }
 
@@ -100,7 +110,7 @@ var ReactGridLayout = function (_React$Component) {
    */
 
 
-  ReactGridLayout.prototype.onDragStart = function onDragStart(i, x, y, _ref) {
+  ReactGridLayout.prototype.onDragStart = function onDragStart(i /*:string*/, x /*:number*/, y /*:number*/, _ref) {
     var e = _ref.e;
     var node = _ref.node;
     var layout = this.state.layout;
@@ -108,7 +118,7 @@ var ReactGridLayout = function (_React$Component) {
     var l = (0, _utils.getLayoutItem)(layout, i);
     if (!l) return;
 
-    this.setState({ oldDragItem: (0, _utils.clone)(l) });
+    this.setState({ oldDragItem: (0, _utils.cloneLayoutItem)(l) });
 
     this.props.onDragStart(layout, l, l, null, e, node);
   };
@@ -123,7 +133,7 @@ var ReactGridLayout = function (_React$Component) {
    */
 
 
-  ReactGridLayout.prototype.onDrag = function onDrag(i, x, y, _ref2) {
+  ReactGridLayout.prototype.onDrag = function onDrag(i /*:string*/, x /*:number*/, y /*:number*/, _ref2) {
     var e = _ref2.e;
     var node = _ref2.node;
     var oldDragItem = this.state.oldDragItem;
@@ -158,7 +168,7 @@ var ReactGridLayout = function (_React$Component) {
    */
 
 
-  ReactGridLayout.prototype.onDragStop = function onDragStop(i, x, y, _ref3) {
+  ReactGridLayout.prototype.onDragStop = function onDragStop(i /*:string*/, x /*:number*/, y /*:number*/, _ref3) {
     var e = _ref3.e;
     var node = _ref3.node;
     var oldDragItem = this.state.oldDragItem;
@@ -182,7 +192,7 @@ var ReactGridLayout = function (_React$Component) {
     this.props.onLayoutChange(this.state.layout);
   };
 
-  ReactGridLayout.prototype.onResizeStart = function onResizeStart(i, w, h, _ref4) {
+  ReactGridLayout.prototype.onResizeStart = function onResizeStart(i /*:string*/, w /*:number*/, h /*:number*/, _ref4) {
     var e = _ref4.e;
     var node = _ref4.node;
     var layout = this.state.layout;
@@ -190,12 +200,12 @@ var ReactGridLayout = function (_React$Component) {
     var l = (0, _utils.getLayoutItem)(layout, i);
     if (!l) return;
 
-    this.setState({ oldResizeItem: (0, _utils.clone)(l) });
+    this.setState({ oldResizeItem: (0, _utils.cloneLayoutItem)(l) });
 
     this.props.onResizeStart(layout, l, l, null, e, node);
   };
 
-  ReactGridLayout.prototype.onResize = function onResize(i, w, h, _ref5) {
+  ReactGridLayout.prototype.onResize = function onResize(i /*:string*/, w /*:number*/, h /*:number*/, _ref5) {
     var e = _ref5.e;
     var node = _ref5.node;
     var _state = this.state;
@@ -211,7 +221,7 @@ var ReactGridLayout = function (_React$Component) {
 
     // Create placeholder element (display only)
     var placeholder = {
-      w: w, h: h, x: l.x, y: l.y, placeholder: true, i: i
+      w: w, h: h, x: l.x, y: l.y, static: true, i: i
     };
 
     this.props.onResize(layout, oldResizeItem, l, placeholder, e, node);
@@ -220,7 +230,7 @@ var ReactGridLayout = function (_React$Component) {
     this.setState({ layout: (0, _utils.compact)(layout, this.props.verticalCompact), activeDrag: placeholder });
   };
 
-  ReactGridLayout.prototype.onResizeStop = function onResizeStop(i, w, h, _ref6) {
+  ReactGridLayout.prototype.onResizeStop = function onResizeStop(i /*:string*/, w /*:number*/, h /*:number*/, _ref6) {
     var e = _ref6.e;
     var node = _ref6.node;
     var _state2 = this.state;
@@ -269,7 +279,6 @@ var ReactGridLayout = function (_React$Component) {
         x: activeDrag.x,
         y: activeDrag.y,
         i: activeDrag.i,
-        isPlaceholder: true,
         className: 'react-grid-placeholder',
         containerWidth: width,
         cols: cols,
@@ -290,24 +299,27 @@ var ReactGridLayout = function (_React$Component) {
    */
 
 
-  ReactGridLayout.prototype.processGridItem = function processGridItem(child) {
+  ReactGridLayout.prototype.processGridItem = function processGridItem(child /*: React.Element<any>*/) {
     if (!child.key) return;
     var l = (0, _utils.getLayoutItem)(this.state.layout, child.key);
-    if (!l) return;
+    if (!l) return null;
     var _props2 = this.props;
     var width = _props2.width;
     var cols = _props2.cols;
     var margin = _props2.margin;
     var rowHeight = _props2.rowHeight;
     var maxRows = _props2.maxRows;
+    var isDraggable = _props2.isDraggable;
+    var isResizable = _props2.isResizable;
     var useCSSTransforms = _props2.useCSSTransforms;
     var draggableCancel = _props2.draggableCancel;
     var draggableHandle = _props2.draggableHandle;
+    var mounted = this.state.mounted;
 
 
     return _react2.default.createElement(
       _GridItem2.default,
-      _extends({
+      {
         containerWidth: width,
         cols: cols,
         margin: margin,
@@ -323,9 +335,20 @@ var ReactGridLayout = function (_React$Component) {
         onResizeStop: this.onResizeStop,
         isDraggable: this.props.isDraggable,
         isResizable: this.props.isResizable,
-        useCSSTransforms: useCSSTransforms && this.state.isMounted,
-        usePercentages: !this.state.isMounted
-      }, l),
+        useCSSTransforms: useCSSTransforms && mounted,
+        usePercentages: !mounted,
+
+        w: l.w,
+        h: l.h,
+        x: l.x,
+        y: l.y,
+        i: l.i,
+        minH: l.minH,
+        minW: l.minW,
+        maxH: l.maxH,
+        maxW: l.maxW,
+        'static': l.static
+      },
       child
     );
   };
@@ -386,7 +409,7 @@ ReactGridLayout.propTypes = {
   // {x: Number, y: Number, w: Number, h: Number, i: String}
   layout: function layout(props) {
     var layout = props.layout;
-    // I hope you're setting the _grid property on the grid items
+    // I hope you're setting the data-grid property on the grid items
     if (layout === undefined) return;
     (0, _utils.validateLayout)(layout, 'layout');
   },
@@ -457,6 +480,7 @@ ReactGridLayout.propTypes = {
 ReactGridLayout.defaultProps = {
   autoSize: true,
   cols: 12,
+  className: '',
   rowHeight: 150,
   maxRows: Infinity, // infinite vertical growth
   layout: [],
@@ -477,8 +501,8 @@ ReactGridLayout.defaultProps = {
 var _initialiseProps = function _initialiseProps() {
   this.state = {
     activeDrag: null,
-    isMounted: false,
     layout: (0, _utils.synchronizeLayoutWithChildren)(this.props.layout, this.props.children, this.props.cols, this.props.verticalCompact),
+    mounted: false,
     oldDragItem: null,
     oldResizeItem: null
   };

@@ -32,6 +32,13 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 var noop = function noop() {};
 
+/*:: import type {Layout} from './utils';*/
+/*:: type State = {
+  layout: Layout,
+  breakpoint: string,
+  cols: number
+};*/
+
 var ResponsiveReactGridLayout = function (_React$Component) {
   _inherits(ResponsiveReactGridLayout, _React$Component);
 
@@ -44,7 +51,11 @@ var ResponsiveReactGridLayout = function (_React$Component) {
       args[_key] = arguments[_key];
     }
 
-    return _ret = (_temp = (_this = _possibleConstructorReturn(this, _React$Component.call.apply(_React$Component, [this].concat(args))), _this), _this.state = _this.generateInitialState(), _temp), _possibleConstructorReturn(_this, _ret);
+    return _ret = (_temp = (_this = _possibleConstructorReturn(this, _React$Component.call.apply(_React$Component, [this].concat(args))), _this), _this.state = _this.generateInitialState(), _this.onLayoutChange = function (layout) {
+      var _extends2;
+
+      _this.props.onLayoutChange(layout, _extends({}, _this.props.layouts, (_extends2 = {}, _extends2[_this.state.breakpoint] = layout, _extends2)));
+    }, _temp), _possibleConstructorReturn(_this, _ret);
   }
 
   // This should only include propTypes needed in this code; RGL itself
@@ -72,95 +83,83 @@ var ResponsiveReactGridLayout = function (_React$Component) {
     };
   };
 
-  ResponsiveReactGridLayout.prototype.componentWillReceiveProps = function componentWillReceiveProps(nextProps) {
+  ResponsiveReactGridLayout.prototype.componentWillReceiveProps = function componentWillReceiveProps(nextProps /*: Object*/) {
 
-    if (nextProps.width != this.props.width) {
-      var newBreakpoint = nextProps.breakpoint || (0, _responsiveUtils.getBreakpointFromWidth)(nextProps.breakpoints, nextProps.width);
-      this.onWidthChange(nextProps.width, newBreakpoint);
-    }
-
-    // Allow parent to set breakpoint directly.
-    if (nextProps.breakpoint !== this.props.breakpoint) {
-      this.onWidthChange(nextProps.width, nextProps.breakpoint);
+    // Allow parent to set width or breakpoint directly.
+    if (nextProps.width != this.props.width || nextProps.breakpoint !== this.props.breakpoint || !(0, _lodash2.default)(nextProps.breakpoints, this.props.breakpoints) || !(0, _lodash2.default)(nextProps.cols, this.props.cols)) {
+      this.onWidthChange(nextProps);
     }
 
     // Allow parent to set layouts directly.
-    if (!(0, _lodash2.default)(nextProps.layouts, this.props.layouts)) {
-      var _state = this.state;
-      var _breakpoint = _state.breakpoint;
-      var _cols = _state.cols;
+    else if (!(0, _lodash2.default)(nextProps.layouts, this.props.layouts)) {
+        var _state = this.state;
+        var _breakpoint = _state.breakpoint;
+        var _cols = _state.cols;
 
-      // Since we're setting an entirely new layout object, we must generate a new responsive layout
-      // if one does not exist.
+        // Since we're setting an entirely new layout object, we must generate a new responsive layout
+        // if one does not exist.
 
-      var newLayout = (0, _responsiveUtils.findOrGenerateResponsiveLayout)(nextProps.layouts, nextProps.breakpoints, _breakpoint, _breakpoint, _cols, nextProps.verticalLayout);
-      this.setState({ layout: newLayout });
-    }
+        var newLayout = (0, _responsiveUtils.findOrGenerateResponsiveLayout)(nextProps.layouts, nextProps.breakpoints, _breakpoint, _breakpoint, _cols, nextProps.verticalCompact);
+        this.setState({ layout: newLayout });
+      }
   };
+
+  // wrap layouts so we do not need to pass layouts to child
+
 
   /**
    * When the width changes work through breakpoints and reset state with the new width & breakpoint.
    * Width changes are necessary to figure out the widget widths.
    */
+  ResponsiveReactGridLayout.prototype.onWidthChange = function onWidthChange(nextProps /*: typeof ResponsiveReactGridLayout.prototype.props*/) {
+    var breakpoints = nextProps.breakpoints;
+    var cols = nextProps.cols;
+    var verticalCompact = nextProps.verticalCompact;
 
-
-  ResponsiveReactGridLayout.prototype.onWidthChange = function onWidthChange(width, newBreakpoint) {
-    var _props2 = this.props;
-    var breakpoints = _props2.breakpoints;
-    var verticalLayout = _props2.verticalLayout;
-    var verticalCompact = _props2.verticalCompact;
-    var cols = _props2.cols;
-
+    var newBreakpoint = nextProps.breakpoint || (0, _responsiveUtils.getBreakpointFromWidth)(nextProps.breakpoints, nextProps.width);
 
     var lastBreakpoint = this.state.breakpoint;
 
     // Breakpoint change
-    if (lastBreakpoint !== newBreakpoint) {
+    if (lastBreakpoint !== newBreakpoint || this.props.breakpoints !== breakpoints || this.props.cols !== cols) {
+      var layouts = nextProps.layouts;
 
-      // Store the current layout
-      var layouts = this.props.layouts;
-      layouts[lastBreakpoint] = JSON.parse(JSON.stringify(this.state.layout));
+      // Preserve the current layout if the current breakpoint is not present in the next layouts.
+      if (!(lastBreakpoint in layouts)) layouts[lastBreakpoint] = (0, _utils.cloneLayout)(this.state.layout);
 
-      // Find or generate a new one.
-      var newCols = (0, _responsiveUtils.getColsFromBreakpoint)(newBreakpoint, cols);
-      var _layout = (0, _responsiveUtils.findOrGenerateResponsiveLayout)(layouts, breakpoints, newBreakpoint, lastBreakpoint, newCols, verticalLayout);
+      // Find or generate a new layout.
+      var newCols /*: number*/ = (0, _responsiveUtils.getColsFromBreakpoint)(newBreakpoint, cols);
+      var _layout = (0, _responsiveUtils.findOrGenerateResponsiveLayout)(layouts, breakpoints, newBreakpoint, lastBreakpoint, newCols, verticalCompact);
 
       // This adds missing items.
-      _layout = (0, _utils.synchronizeLayoutWithChildren)(_layout, this.props.children, newCols, verticalCompact);
+      _layout = (0, _utils.synchronizeLayoutWithChildren)(_layout, nextProps.children, newCols, verticalCompact);
 
-      // Store this new layout as well.
+      // Store the new layout.
       layouts[newBreakpoint] = _layout;
 
       // callbacks
       this.props.onLayoutChange(_layout, layouts);
       this.props.onBreakpointChange(newBreakpoint, newCols);
-      this.props.onWidthChange(width, this.props.margin, newCols);
+      this.props.onWidthChange(nextProps.width, nextProps.margin, newCols);
 
       this.setState({ breakpoint: newBreakpoint, layout: _layout, cols: newCols });
     }
   };
 
   ResponsiveReactGridLayout.prototype.render = function render() {
-    var _props3 = this.props;
-    var breakpoint = _props3.breakpoint;
-    var breakpoints = _props3.breakpoints;
-    var cols = _props3.cols;
-    var layouts = _props3.layouts;
-    var onBreakpointChange = _props3.onBreakpointChange;
-    var onLayoutChange = _props3.onLayoutChange;
-    var onWidthChange = _props3.onWidthChange;
+    var _props2 = this.props;
+    var breakpoint = _props2.breakpoint;
+    var breakpoints = _props2.breakpoints;
+    var cols = _props2.cols;
+    var layouts = _props2.layouts;
+    var onBreakpointChange = _props2.onBreakpointChange;
+    var onLayoutChange = _props2.onLayoutChange;
+    var onWidthChange = _props2.onWidthChange;
 
-    var other = _objectWithoutProperties(_props3, ['breakpoint', 'breakpoints', 'cols', 'layouts', 'onBreakpointChange', 'onLayoutChange', 'onWidthChange']);
-
-    // wrap layouts so we do not need to pass layouts to child
-
-
-    var onLayoutChangeWrapper = function onLayoutChangeWrapper(layout) {
-      return onLayoutChange(layout, layouts);
-    };
+    var other = _objectWithoutProperties(_props2, ['breakpoint', 'breakpoints', 'cols', 'layouts', 'onBreakpointChange', 'onLayoutChange', 'onWidthChange']);
 
     return _react2.default.createElement(_ReactGridLayout2.default, _extends({}, other, {
-      onLayoutChange: onLayoutChangeWrapper,
+      onLayoutChange: this.onLayoutChange,
       layout: this.state.layout,
       cols: this.state.cols
     }));
