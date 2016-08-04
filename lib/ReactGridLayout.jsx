@@ -1,6 +1,7 @@
 // @flow
 import React, {PropTypes} from 'react';
 import isEqual from 'lodash.isequal';
+import shallowEqual from 'react-pure-render/shallowEqual';
 import {autoBindHandlers, bottom, cloneLayoutItem, compact, getLayoutItem, moveElement,
   synchronizeLayoutWithChildren, validateLayout} from './utils';
 import GridItem from './GridItem';
@@ -175,7 +176,7 @@ export default class ReactGridLayout extends React.Component {
     // If children change, also regenerate the layout. Use our state
     // as the base in case because it may be more up to date than
     // what is in props.
-    else if (nextProps.children.length !== this.props.children.length) {
+    else if (!shallowEqual(nextProps.children, this.props.children)) {
       newLayoutBase = this.state.layout;
     }
 
@@ -379,8 +380,8 @@ export default class ReactGridLayout extends React.Component {
         onResizeStart={this.onResizeStart}
         onResize={this.onResize}
         onResizeStop={this.onResizeStop}
-        isDraggable={this.props.isDraggable}
-        isResizable={this.props.isResizable}
+        isDraggable={isDraggable}
+        isResizable={isResizable}
         useCSSTransforms={useCSSTransforms && mounted}
         usePercentages={!mounted}
 

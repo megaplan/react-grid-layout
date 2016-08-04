@@ -12,6 +12,10 @@ var _lodash = require('lodash.isequal');
 
 var _lodash2 = _interopRequireDefault(_lodash);
 
+var _shallowEqual = require('react-pure-render/shallowEqual');
+
+var _shallowEqual2 = _interopRequireDefault(_shallowEqual);
+
 var _utils = require('./utils');
 
 var _GridItem = require('./GridItem');
@@ -77,7 +81,7 @@ var ReactGridLayout = function (_React$Component) {
     // If children change, also regenerate the layout. Use our state
     // as the base in case because it may be more up to date than
     // what is in props.
-    else if (nextProps.children.length !== this.props.children.length) {
+    else if (!(0, _shallowEqual2.default)(nextProps.children, this.props.children)) {
         newLayoutBase = this.state.layout;
       }
 
