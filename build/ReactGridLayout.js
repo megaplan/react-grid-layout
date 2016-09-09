@@ -337,8 +337,8 @@ var ReactGridLayout = function (_React$Component) {
         onResizeStart: this.onResizeStart,
         onResize: this.onResize,
         onResizeStop: this.onResizeStop,
-        isDraggable: this.props.isDraggable,
-        isResizable: this.props.isResizable,
+        isDraggable: isDraggable,
+        isResizable: isResizable,
         useCSSTransforms: useCSSTransforms && mounted,
         usePercentages: !mounted,
 

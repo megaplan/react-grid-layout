@@ -1,5 +1,5 @@
 {
-  "name": "@megaplan/react-grid-layout",
+  "name": "react-grid-layout",
   "version": "0.12.7",
   "description": "A draggable and resizable grid layout with responsive breakpoints, for React.",
   "main": "index.js",
